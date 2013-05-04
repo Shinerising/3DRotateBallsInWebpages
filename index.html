@@ -1,0 +1,229 @@
+﻿<html itemtype="http://schema.org/Review" xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head profile="http://www.w3.org/2005/10/profile">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<title>Test</title>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.min.js"></script>
+	<style type="text/css">
+	body{
+	margin:0;
+	background:#AAAAAA;
+	}
+	#area{
+	width:100%;
+	height:100%;
+	}
+	#main{
+	width:600px;
+	height:600px;
+	margin:50px auto;
+	border-radius:50%;
+	position:relative;
+	cursor:pointer;
+	}
+	.circle{
+	width:80px;
+	height:80px;
+	background:#EEEEEE;
+	border:#888888 1px solid;
+	box-shadow:#333333 -5px -5px 40px inset;
+	border-radius:50%;
+	position:absolute;
+	overflow:hidden;
+	}
+	#c{
+	left:260px;
+	top:260px;
+	z-index:320;
+	}
+	.cimg{
+	width:100%;
+	height:100%;
+	}
+	.cmask{
+	position:absolute;
+	top:0px;
+	left:0px;
+	width:100%;
+	height:100%;
+	border-radius:50%;
+	box-shadow:#333333 -5px -5px 20px inset;
+	}
+	</style>
+	<script type="text/javascript">
+	var circles = new Array();
+	
+	function circle(x,y,z,zoom){
+		this.x=x;
+		this.y=y;
+		this.z=z;
+		this.zoom=zoom;
+	}
+	
+	function mouse(x,y,ox,oy,down){
+		this.x=x;
+		this.y=y;
+		this.ox=ox;
+		this.oy=oy;
+		this.down=down;
+	}
+	
+	function ball(d1,d2,r,r0){
+		this.d1=d1;
+		this.d2=d2;
+		this.r=r;
+		this.r0=r0;
+	}
+	var bl=new ball(0,0,1,300);
+	
+	function Getcircle(id){
+		var newcircle;
+		switch(id){
+		case 0 : newcircle=new circle(0.577,0.577,0.577,1);break;
+		case 1 : newcircle=new circle(0.577,-0.577,0.577,1);break;
+		case 2 : newcircle=new circle(0.577,0.577,-0.577,1);break;
+		case 3 : newcircle=new circle(0.577,-0.577,-0.577,1);break;
+		case 4 : newcircle=new circle(-0.577,0.577,0.577,1);break;
+		case 5 : newcircle=new circle(-0.577,-0.577,0.577,1);break;
+		case 6 : newcircle=new circle(-0.577,0.577,-0.577,1);break;
+		case 7 : newcircle=new circle(-0.577,-0.577,-0.577,1);break;
+		}
+		newcircle.zoom=1+newcircle.x/5;
+		return newcircle;
+	}
+	
+	function Createcircle(id){
+		var newNode=document.createElement("div");
+		newNode.innerHTML="  ";
+		newNode.className="circle";
+		newNode.id="c"+id;
+		$("#main").append(newNode);
+	}
+	
+	function Drawcircle(id){
+		var Node=$("#c"+id);
+		Node.css("z-index",parseInt(circles[id].x*bl.r)+20+bl.r);
+		circles[id].zoom=1+circles[id].x/5;
+		Node.css("zoom",circles[id].zoom);
+		Node.css("left",(bl.r0+circles[id].y*bl.r)/circles[id].zoom-Node.width()/2);
+		Node.css("top",(bl.r0-circles[id].z*bl.r)/circles[id].zoom-Node.height()/2);
+	}
+	
+	function Rotatecircle(deg0,deg1,id){
+		var or=Math.sqrt(circles[id].y*circles[id].y+circles[id].z*circles[id].z);
+		var oy=or*Math.sin(deg0+Atan(circles[id].y,circles[id].z,0));
+		var oz=or*Math.cos(deg0+Atan(circles[id].y,circles[id].z,0));
+		var ox=circles[id].x;
+		var nx=Math.sqrt(ox*ox+oy*oy)*Math.cos(deg1+Atan(oy,ox,0));
+		var ny=Math.sqrt(ox*ox+oy*oy)*Math.sin(deg1+Atan(oy,ox,0));
+		var nz=oz;
+		circles[id].x=nx;
+		circles[id].y=ny*Math.cos(deg0)-nz*Math.sin(deg0);
+		circles[id].z=ny*Math.sin(deg0)+nz*Math.cos(deg0);	
+	}
+	
+	function rotate(){
+		if(ms.down){
+		ox=ms.ox;
+		oy=ms.oy;
+		x=ms.x;
+		y=ms.y;
+		var px=(ox+x)/2;
+		var py=(oy+y)/2;
+		var l=Math.sqrt((ox-x)*(ox-x)+(oy-y)*(oy-y));
+		var r=Math.sqrt(px*px+py*py);
+		var n=Math.sqrt(bl.r*bl.r-r*r);
+		var d1=Atan(y-oy,x-ox);
+		var d2=Math.PI*l/2/n;
+		bl.d1=d1;
+		bl.d2=d2;
+		//if(x<ox)d2=d2*-1;
+		//document.title=d1+","+d2;
+		for(var i=0;i<8;i++){
+			Rotatecircle(d1,d2,i);
+			Drawcircle(i);
+		}
+		ms.ox=ms.x;
+		ms.oy=ms.y;
+		}
+		else{
+		ms.ox=ms.x;
+		ms.oy=ms.y;
+		for(var i=0;i<8;i++){
+			Rotatecircle(bl.d1,bl.d2,i);
+			Drawcircle(i);
+			if(bl.d2>0.01)bl.d2=bl.d2/1.001;
+			bl.d1=bl.d1+Math.random()/1000+0.0001;
+		}
+		}
+		window.setTimeout(rotate,10);
+	}
+	
+	function start(p){
+		if(p==0){
+			bl.r=bl.r*1.2;
+			if(bl.r>400)window.setTimeout(function(){start(1)},10);
+			else window.setTimeout(function(){start(0)},10);
+		}
+		if(p==1){
+			bl.r=bl.r/1.05;
+			if(bl.r<300)bl.r=300;
+			else window.setTimeout(function(){start(1)},10);
+		}
+		
+	}
+	
+	function Atan(x,y,d){
+		if(y==0&&x>0)return Math.PI/2;
+		else if(y==0&&x<0)return Math.PI*3/2;
+		else if(y!=0){
+			if(y>0)return Math.atan(x/y);
+			else if(y<0)return Math.atan(x/y)+Math.PI;
+		}
+		else return 0;
+	}
+	
+	$(document).ready(function(){
+		for(var i=0;i<8;i++){
+			circles.push(Getcircle(i));
+			Createcircle(i);
+			Drawcircle(i);
+		}
+		bl.d2=Math.random()/10;
+		bl.d1=(Math.random()-0.5)*2*Math.PI;
+		bl.r=1;
+		start(0)
+		rotate();
+	}
+	)
+	
+	</script>
+</head>
+<body>
+	<div id="area">
+		<div id="main">
+			<div id="c" class="circle">
+				<div class="cmask"></div>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript">
+	var ms=new mouse(0,0,0,0,0);
+	$("#main").mousedown(function(e){
+		ms.down=1;
+		ms.ox=e.pageX-300-($("#area").width()-$("#main").width())/2;
+		ms.oy=350-e.pageY;
+		ms.x=ms.ox;
+		ms.y=ms.oy;
+	}).mouseup(function(e){
+		ms.down=0;
+		ms.ox=ms.x;
+		ms.oy=ms.y;
+	}).mousemove(function(e){
+		if(ms.down){
+			ms.x=e.pageX-300-($("#area").width()-$("#main").width())/2;
+			ms.y=350-e.pageY;
+		}
+	});
+	</script>
+</body>
+</html>
